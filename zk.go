@@ -11,13 +11,13 @@ import (
 )
 
 var (
-	// ZkSvr is zookeeper connection string
+	// zkSvr is zookeeper connection string
 	// If not empty, will load from zookeeper instead of the default file.
-	ZkSvr string
+	zkSvr string
 )
 
 func loadFromZk(znode string) (conf *Conf, err error) {
-	conn, _, err := zk.Connect(strings.Split(ZkSvr, ","), time.Second*20)
+	conn, _, err := zk.Connect(strings.Split(zkSvr, ","), time.Second*20)
 	if err != nil {
 		return nil, err
 	}

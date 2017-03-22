@@ -7,7 +7,7 @@ Main features include:
 
 2) Commenting
 
-3) Dot-seperated key
+3) Dot-separated key
 
 4) Include
 

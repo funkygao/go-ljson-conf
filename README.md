@@ -13,7 +13,7 @@ Visit [Loose JSON project](https://github.com/daviddengcn/ljson) for more detail
 
 Lines starting with `//` or `;` (excluding the leading spaces) are considered as comments and thus ignored.
 
-**Dot-seperated hierarchical key**
+**Dot-separated hierarchical key**
 
 For configure:
 
