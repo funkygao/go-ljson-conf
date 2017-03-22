@@ -133,6 +133,10 @@ func findPath(fn villa.Path) villa.Path {
 // Load reads configurations from a speicified file. If some error found
 // during reading, it will be return, but the conf is still available.
 func Load(fn string) (conf *Conf, err error) {
+	if _, err := os.Stat(fn); err != nil {
+		return nil, err
+	}
+
 	path := findPath(villa.Path(fn))
 	conf = &Conf{
 		path: path,
@@ -165,9 +169,8 @@ func Load(fn string) (conf *Conf, err error) {
 
 // Watch periodically checks the configure file in curConf with the specified interval.
 // If the configuration file changes, it's reloaded and sent to the specified channel as a *Conf.
-// TODO use inotify mechanism instead of poll.
-func Watch(curConf *Conf, interval time.Duration, ch chan *Conf) error {
-	configFileName := string(curConf.path)
+func (c *Conf) Watch(interval time.Duration, stopper <-chan struct{}, ch chan *Conf) error {
+	configFileName := string(c.path)
 	lastStat, err := os.Stat(configFileName)
 	if err != nil {
 		return err
@@ -175,22 +178,29 @@ func Watch(curConf *Conf, interval time.Duration, ch chan *Conf) error {
 
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
-	for _ = range ticker.C {
-		stat, err := os.Stat(configFileName)
-		if err != nil {
-			// e,g. the config file was deleted
-			return err
-		}
 
-		if stat.ModTime() != lastStat.ModTime() {
-			lastStat = stat
-
-			cf, err := Load(string(curConf.path))
+	for {
+		select {
+		case <-ticker.C:
+			stat, err := os.Stat(configFileName)
 			if err != nil {
+				// e,g. the config file was deleted
 				return err
 			}
 
-			ch <- cf
+			if stat.ModTime() != lastStat.ModTime() {
+				lastStat = stat
+
+				cf, err := Load(string(configFileName))
+				if err != nil {
+					return err
+				}
+
+				ch <- cf
+			}
+
+		case <-stopper:
+			return nil
 		}
 	}
 

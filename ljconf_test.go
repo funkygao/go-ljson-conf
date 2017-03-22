@@ -132,7 +132,7 @@ func TestBasic(t *testing.T) {
 }
 
 func TestPath(t *testing.T) {
-	cf, _ := Load("fortest.conf")
+	cf, _ := Load("testdata/fortest.conf")
 	t.Logf("Path: %v", cf.ConfPath())
 	js, _ := json.MarshalIndent(cf.Object("", nil), "", "    ")
 	t.Logf("Loaded: %v", string(js))
@@ -147,8 +147,8 @@ func TestFormatError(t *testing.T) {
 
 func TestConfNotExists(t *testing.T) {
 	_, err := Load("testdata/nonexist.conf")
-	if err != nil {
-		t.Error(err)
+	if err == nil {
+		t.Error("should raise err")
 	}
 }
 
@@ -209,7 +209,7 @@ func TestWatchNormal(t *testing.T) {
 	}
 
 	ch := make(chan *Conf)
-	go Watch(cf, time.Millisecond*100, ch)
+	go cf.Watch(time.Millisecond*100, nil, ch)
 
 	go func() {
 		time.Sleep(time.Second)             // wait for Watch enter into main loop
@@ -242,7 +242,7 @@ func TestWatchEncounterError(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-		err = Watch(cf, time.Millisecond*100, ch)
+		err = cf.Watch(time.Millisecond*100, nil, ch)
 		wg.Done()
 	}()
 
