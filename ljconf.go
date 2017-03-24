@@ -49,6 +49,11 @@ func (c *Conf) ConfPath() villa.Path {
 // Watch periodically checks the configure file in curConf with the specified interval.
 // If the configuration file changes, it's reloaded and sent to the specified channel as a *Conf.
 func (c *Conf) Watch(interval time.Duration, stopper <-chan struct{}, ch chan *Conf) error {
+	if zkSvr != "" {
+		// TODO
+		return nil
+	}
+
 	configFileName := string(c.path)
 	lastStat, err := os.Stat(configFileName)
 	if err != nil {
