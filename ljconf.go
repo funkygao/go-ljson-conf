@@ -30,11 +30,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/daviddengcn/go-villa"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/daviddengcn/go-villa"
 )
 
 type Conf struct {
@@ -50,8 +52,7 @@ func (c *Conf) ConfPath() villa.Path {
 // If the configuration file changes, it's reloaded and sent to the specified channel as a *Conf.
 func (c *Conf) Watch(interval time.Duration, stopper <-chan struct{}, ch chan *Conf) error {
 	if zkSvr != "" {
-		// TODO
-		return nil
+		return c.watchZk(interval, stopper, ch)
 	}
 
 	configFileName := string(c.path)
@@ -81,6 +82,28 @@ func (c *Conf) Watch(interval time.Duration, stopper <-chan struct{}, ch chan *C
 				}
 
 				ch <- cf
+			}
+
+		case <-stopper:
+			return nil
+		}
+	}
+
+	return nil
+}
+
+func (c *Conf) watchZk(interval time.Duration, stopper <-chan struct{}, ch chan *Conf) error {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if c1, err := loadFromZk(dsn); err == nil {
+				// ignore the zk err: wait for next tick and retry
+				if !reflect.DeepEqual(c, c1) {
+					ch <- c1
+				}
 			}
 
 		case <-stopper:
