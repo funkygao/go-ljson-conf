@@ -44,6 +44,10 @@ type Conf struct {
 	db   map[string]interface{}
 }
 
+func (c *Conf) Content() map[string]interface{} {
+	return c.db
+}
+
 func (c *Conf) ConfPath() villa.Path {
 	return c.path
 }
